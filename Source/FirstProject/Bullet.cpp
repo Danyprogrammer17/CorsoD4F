@@ -3,6 +3,7 @@
 
 #include "Bullet.h"
 #include "Components/BoxComponent.h"
+#include "EnemyController.h"
 
 // Sets default values
 ABullet::ABullet()
@@ -11,7 +12,8 @@ ABullet::ABullet()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
-	SetRootComponent(RootBox);
+	RootBox->SetGenerateOverlapEvents(true);
+	RootBox->OnComponentBeginOverlap.AddDynamic(this, &ABullet::OnOverlap);
 }
 
 // Called when the game starts or when spawned
@@ -32,8 +34,8 @@ void ABullet::Tick(float DeltaTime)
 	NewLocation.X += (speed * DeltaTime);
 	SetActorLocation(NewLocation);
 
-	UE_LOG(LogTemp, Warning, TEXT("Bullet location: %f"), NewLocation.X)
-	UE_LOG(LogTemp, Warning, TEXT("Bullet location: %f"), NewLocation.Y)
+	//UE_LOG(LogTemp, Warning, TEXT("Bullet location: %f"), NewLocation.X)
+	//UE_LOG(LogTemp, Warning, TEXT("Bullet location: %f"), NewLocation.Y)
 	//se i proiettili vanno fuori la scena distruggiamoli
 	if (NewLocation.X > 3500.0f)
 	{
@@ -41,3 +43,13 @@ void ABullet::Tick(float DeltaTime)
 	}
 }
 
+void ABullet::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	
+	if (OtherActor->IsA(AEnemyController::StaticClass()))
+	{
+		this->Destroy();
+		OtherActor->Destroy();
+	}
+
+}

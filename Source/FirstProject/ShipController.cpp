@@ -3,7 +3,9 @@
 
 #include "ShipController.h"
 #include "Components/BoxComponent.h"
+#include "EnemyController.h"
 #include "Bullet.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AShipController::AShipController()
@@ -11,6 +13,10 @@ AShipController::AShipController()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
+	CollisionBox->SetGenerateOverlapEvents(true);
+	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AShipController::OnTriggerEnter);
+
+
 	AutoPossessPlayer = EAutoReceiveInput::Player0;//player di default sarà quello nella scena
 }
 
@@ -60,8 +66,23 @@ void AShipController::OnShoot()
 	
 	if (World) { //se esiste
 		FVector Location = GetActorLocation();//prendo la posizione del player poichè il bullet partirà da lì
-		UE_LOG(LogTemp, Warning, TEXT("Player location: %f"), Location.X);
 		World->SpawnActor<ABullet>(BulletBP, Location, FRotator::ZeroRotator); //spawno il bullet con location del giocatore e rotazione zero
 	}
+}
+
+void AShipController::OnTriggerEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//UE_LOG(LogTemp, Warning, TEXT("TRIGGER"));
+	if (OtherActor->IsA(AEnemyController::StaticClass())) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TRIGGER WITH ENEMY"));
+		Died = true;
+		this->SetActorHiddenInGame(true);
+
+		//gioco in pausa
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+	}
+
 }
 

@@ -26,10 +26,10 @@ void AEnemyController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	FVector NewLocation = GetActorLocation();
-	NewLocation.X = speed * DeltaTime;
+	NewLocation.X += speed * DeltaTime;
+	SetActorLocation(NewLocation);
 
 	if (NewLocation.X < 1000.0f) {
 		this->Destroy();
 	}
 }
-
